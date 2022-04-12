@@ -1,0 +1,356 @@
+{
+	"info": {
+		"_postman_id": "d159d7d8-24ee-40bd-935f-16fe32defb2a",
+		"name": "API Jira TestRail",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create New task Jira",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.collectionVariables.set(\"Refs\", jsonData.key);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{jira_pass}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{jira_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fields\": {\r\n       \"project\":\r\n       {\r\n          \"key\": \"{{project_key}}\"\r\n       },\r\n       \"summary\": \"{{new_TR_name}}: run full regression testing\",\r\n       \"description\": \"please see the report here:\",\r\n       \"issuetype\": {\r\n          \"name\": \"Task\"          \r\n       },\r\n        \"priority\": {\r\n            \"id\": \"4\"\r\n        },\r\n       \"Story Points\": 4,\r\n        \"Team\": \"architecture\",\r\n        \"Acceptance Criteria\": \"regression test is done, no critical issues are found\" \r\n       \r\n   }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{jira_url}}/rest/api/2/issue/",
+					"host": [
+						"{{jira_url}}"
+					],
+					"path": [
+						"rest",
+						"api",
+						"2",
+						"issue",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find runID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"var name = pm.collectionVariables.get(\"Test_Run_name\");\r",
+							"\r",
+							"jsonData.runs.forEach(item =>\r",
+							"{\r",
+							"    if (item.name == name) \r",
+							"    {\r",
+							"        console.log(\"ID: \" + item.id);        \r",
+							"        pm.collectionVariables.set(\"RunID\", item.id)\r",
+							"    }\r",
+							"})\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{TR_pass}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{TR_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{TR_url}}/index.php?/api/v2/get_runs/{{projectID}}",
+					"host": [
+						"{{TR_url}}"
+					],
+					"path": [
+						"index.php"
+					],
+					"query": [
+						{
+							"key": "/api/v2/get_runs/{{projectID}}",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Close run",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{TR_pass}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{TR_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{TR_url}}/index.php?/api/v2/close_run/{{RunID}}",
+					"host": [
+						"{{TR_url}}"
+					],
+					"path": [
+						"index.php"
+					],
+					"query": [
+						{
+							"key": "/api/v2/close_run/{{RunID}}",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find testcases",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"var arr = [];\r",
+							"\r",
+							"function cases() {\r",
+							"    jsonData.cases.forEach(item =>\r",
+							"    {\r",
+							"        if (item.type_id == \"9\") \r",
+							"        {\r",
+							"            console.log(\"ID: \" + item.id);\r",
+							"            arr.push(item.id);\r",
+							"        }\r",
+							"    })\r",
+							"}\r",
+							"\r",
+							"cases();\r",
+							"\r",
+							"pm.collectionVariables.set(\"casesIds\", JSON.stringify(arr));\r",
+							"console.log(\"array: \" + arr);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{TR_pass}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{TR_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{TR_url}}/index.php?/api/v2/get_cases/{{projectID}}&suite_id={{suite_id}}",
+					"host": [
+						"{{TR_url}}"
+					],
+					"path": [
+						"index.php"
+					],
+					"query": [
+						{
+							"key": "/api/v2/get_cases/{{projectID}}",
+							"value": null
+						},
+						{
+							"key": "suite_id",
+							"value": "{{suite_id}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add run",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{TR_pass}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{TR_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"This is a new test run\",\r\n    \"include_all\": false,\r\n    \"case_ids\": {{casesIds}},\r\n    \"refs\": {{Refs}}\r\n}\r\n"
+				},
+				"url": {
+					"raw": "{{TR_url}}/index.php?/api/v2/add_run/{{projectID}}",
+					"host": [
+						"{{TR_url}}"
+					],
+					"path": [
+						"index.php"
+					],
+					"query": [
+						{
+							"key": "/api/v2/add_run/{{projectID}}",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Refs",
+			"value": ""
+		},
+		{
+			"key": "RunID",
+			"value": ""
+		},
+		{
+			"key": "casesIds",
+			"value": ""
+		},
+		{
+			"key": "project_key",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "new_TR_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "projectID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "Test_Run_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "suite_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
